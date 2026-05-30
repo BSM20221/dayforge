@@ -1,12 +1,13 @@
 import EntryCard from "./EntryCard";
 
-function EntryList({ entries, onDeleteEntry }) {
+function EntryList({ entries, onDeleteEntry, onStartEdit }) {
   if (entries.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
         <h2 className="text-xl font-bold text-slate-900">No entries yet</h2>
         <p className="text-slate-500 mt-2">
-          Write your first DayForge entry above. Small daily reflections become big life data.
+          Write your first DayForge entry above. Small daily reflections become
+          big life data.
         </p>
       </div>
     );
@@ -27,6 +28,7 @@ function EntryList({ entries, onDeleteEntry }) {
             key={entry.id}
             entry={entry}
             onDeleteEntry={onDeleteEntry}
+            onStartEdit={onStartEdit}
           />
         ))}
       </div>
