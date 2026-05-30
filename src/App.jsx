@@ -5,17 +5,44 @@ import EntryList from "./components/EntryList";
 import SearchAndFilter from "./components/SearchAndFilter";
 import StatsPanel from "./components/StatsPanel";
 
-import { addEntry, deleteEntry, getEntries } from "./utils/storage";
+import {
+  addEntry,
+  deleteEntry,
+  getEntries,
+  updateEntry,
+} from "./utils/storage";
 
 function App() {
   const [entries, setEntries] = useState(() => getEntries());
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
+  const [editingEntry, setEditingEntry] = useState(null);
 
   function handleAddEntry(entryData) {
     const newEntry = addEntry(entryData);
 
     setEntries((currentEntries) => [newEntry, ...currentEntries]);
+  }
+
+  function handleStartEdit(entry) {
+    setEditingEntry(entry);
+
+    // Move the user back to the form after clicking Edit.
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function handleUpdateEntry(entryId, updatedData) {
+    const updatedEntries = updateEntry(entryId, updatedData);
+
+    setEntries(updatedEntries);
+    setEditingEntry(null);
+  }
+
+  function handleCancelEdit() {
+    setEditingEntry(null);
   }
 
   function handleDeleteEntry(entryId) {
@@ -26,7 +53,12 @@ function App() {
     }
 
     const updatedEntries = deleteEntry(entryId);
+
     setEntries(updatedEntries);
+
+    if (editingEntry?.id === entryId) {
+      setEditingEntry(null);
+    }
   }
 
   const filteredEntries = entries.filter((entry) => {
@@ -71,7 +103,12 @@ function App() {
 
         <StatsPanel entries={entries} />
 
-        <EntryForm onAddEntry={handleAddEntry} />
+        <EntryForm
+          onAddEntry={handleAddEntry}
+          editingEntry={editingEntry}
+          onUpdateEntry={handleUpdateEntry}
+          onCancelEdit={handleCancelEdit}
+        />
 
         <SearchAndFilter
           searchTerm={searchTerm}
@@ -83,6 +120,7 @@ function App() {
         <EntryList
           entries={filteredEntries}
           onDeleteEntry={handleDeleteEntry}
+          onStartEdit={handleStartEdit}
         />
       </div>
     </main>
