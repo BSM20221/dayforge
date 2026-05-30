@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const TAG_OPTIONS = [
   "German",
@@ -12,7 +12,7 @@ const TAG_OPTIONS = [
 
 const MOOD_OPTIONS = ["😄", "🙂", "😐", "😔", "😡", "😰"];
 
-const initialFormData = {
+const createInitialFormData = () => ({
   date: new Date().toISOString().split("T")[0],
   title: "",
   mainText: "",
@@ -23,10 +23,32 @@ const initialFormData = {
   productivityScore: 5,
   tags: [],
   germanPractice: "",
-};
+});
 
-function EntryForm({ onAddEntry }) {
-  const [formData, setFormData] = useState(initialFormData);
+function EntryForm({
+  onAddEntry,
+  editingEntry,
+  onUpdateEntry,
+  onCancelEdit,
+}) {
+  const [formData, setFormData] = useState(createInitialFormData());
+
+  useEffect(() => {
+    if (editingEntry) {
+      setFormData({
+        date: editingEntry.date || new Date().toISOString().split("T")[0],
+        title: editingEntry.title || "",
+        mainText: editingEntry.mainText || "",
+        lessonLearned: editingEntry.lessonLearned || "",
+        challenge: editingEntry.challenge || "",
+        improvement: editingEntry.improvement || "",
+        mood: editingEntry.mood || "🙂",
+        productivityScore: editingEntry.productivityScore || 5,
+        tags: editingEntry.tags || [],
+        germanPractice: editingEntry.germanPractice || "",
+      });
+    }
+  }, [editingEntry]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -50,6 +72,10 @@ function EntryForm({ onAddEntry }) {
     });
   }
 
+  function resetForm() {
+    setFormData(createInitialFormData());
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -58,15 +84,26 @@ function EntryForm({ onAddEntry }) {
       return;
     }
 
-    onAddEntry({
+    const cleanedEntryData = {
       ...formData,
       productivityScore: Number(formData.productivityScore),
-    });
+    };
 
-    setFormData({
-      ...initialFormData,
-      date: new Date().toISOString().split("T")[0],
-    });
+    if (editingEntry) {
+      onUpdateEntry(editingEntry.id, cleanedEntryData);
+    } else {
+      onAddEntry(cleanedEntryData);
+    }
+
+    resetForm();
+  }
+
+  function handleCancelEdit() {
+    resetForm();
+
+    if (onCancelEdit) {
+      onCancelEdit();
+    }
   }
 
   return (
@@ -75,11 +112,21 @@ function EntryForm({ onAddEntry }) {
       className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5"
     >
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Write today&apos;s entry</h2>
+        <h2 className="text-xl font-bold text-slate-900">
+          {editingEntry ? "Edit entry" : "Write today's entry"}
+        </h2>
         <p className="text-sm text-slate-500 mt-1">
-          Reflect, learn, and forge tomorrow.
+          {editingEntry
+            ? "Update your reflection and save the changes."
+            : "Reflect, learn, and forge tomorrow."}
         </p>
       </div>
+
+      {editingEntry && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          You are editing an existing entry. Save changes or cancel editing.
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
@@ -248,12 +295,24 @@ function EntryForm({ onAddEntry }) {
         />
       </div>
 
-      <button
-        type="submit"
-        className="w-full rounded-xl bg-slate-900 text-white font-semibold py-3 hover:bg-slate-700 transition"
-      >
-        Save entry
-      </button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        {editingEntry && (
+          <button
+            type="button"
+            onClick={handleCancelEdit}
+            className="w-full rounded-xl border border-slate-300 text-slate-700 font-semibold py-3 hover:bg-slate-100 transition"
+          >
+            Cancel edit
+          </button>
+        )}
+
+        <button
+          type="submit"
+          className="w-full rounded-xl bg-slate-900 text-white font-semibold py-3 hover:bg-slate-700 transition"
+        >
+          {editingEntry ? "Save changes" : "Save entry"}
+        </button>
+      </div>
     </form>
   );
 }
